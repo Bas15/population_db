@@ -14,25 +14,16 @@ const getUsers = asyncHandler(async (req, res) => {
 // @access private
 const createUser = asyncHandler(async (req, res) =>{
     
-    if(!req.body.text){
+    if(!req.body){
         res.status(400)
 
         throw new Error('please add txt vlaue');;
     }
-    const users = await create({
-        firstname : req.body.text,
-        lastname : req.body.text,
-        email : req.body.text,
-        gender : req.body.text,
-        home_address : req.body.text,
-        department : req.body.text,
-        year_of_grad : req.body.text,
-        worker : req.body.text,
-        unit_position : req.body.text,
-        executive : req.body.text,
-    })
+
+        const newUser = new User({... req.body});
+        const insertedUser = await newUser.save(); 
     
-        res.status(200).json(users)
+        res.status(200).json(insertedUser);
     
 })
 
@@ -40,14 +31,24 @@ const createUser = asyncHandler(async (req, res) =>{
 // @routes put /api/users/:id
 // @access private
 const updateUser = asyncHandler(async (req,res) => {
-    res.json({message:`updated victory number ${req.params.id}`});
+    const user  = await User.findById(req.params.id)
+
+    if(!user){
+        res.status(400)
+        throw new Error('user not found');
+    }  
+   const updateUser = await User.findByIdAndUpdate( req.params.id , req.body, {
+    new : true
+   })
+    res.status(200).json(updateUser);
 })
 
 // @desc delete users
 // @routes delete /api/users/:id
 // @access private
 const deleteUser = asyncHandler(async (req,res) => {
-    res.json({message: `victory number deleted ${req.params.id}`});
+    const deleteUser = await User.findByIdAndRemove(req.params.id)
+    res.status(200).json({message: `id deleted ${req.params.id}`});
 })
 
 module.exports = {
