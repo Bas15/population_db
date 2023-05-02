@@ -15,5 +15,6 @@ app.use(express.urlencoded({extended: false}))
 app.use(errorHandler)
 
  app.use('/api/user', require('./routes/userRoutes'))
+ app.use('/api/userAuth', require('./routes/userAuthRoutes'));
   
 app.listen(port, () => {console.log(`server now runing on port ${port}`)})

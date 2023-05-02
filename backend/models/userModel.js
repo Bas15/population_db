@@ -3,15 +3,18 @@ const mongoose = require('mongoose');
 const userSchema = mongoose.Schema({
     firstname : {
         type : 'string',
-        require : [true, 'please fill every field']
+        require : [true, 'please fill every field'],
+        unique : true
     },
     lastname : {
         type : 'string',
-        require : [true, 'please fill every field']
+        require : [true, 'please fill every field'],
+        unique : true
     },
     email : {
         type : 'string',
-        require : [true, 'please fill every field']
+        require : [true, 'please fill every field'],
+        unique : true
     },
     gender : {
         type : 'string',
