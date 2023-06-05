@@ -3,12 +3,13 @@ const mongoose = require("mongoose");
 
 const UserAuthSchema = mongoose.Schema({
     firstname : {
-        type : mongoose.Schema.Types.ObjectId,
-        ref : 'User'
+        type : 'String',
+        require: [true, 'please add name'],
     },
     email : {
-        type : mongoose.Schema.Types.ObjectId,
-        ref : 'User'
+        type : 'String',
+        require: [true, 'please add email'],
+        unique: true
     },
     password : {
         type : 'String',

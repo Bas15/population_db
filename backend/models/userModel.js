@@ -1,6 +1,11 @@
 const mongoose = require('mongoose');
 
 const userSchema = mongoose.Schema({
+    user: {
+        type: mongoose.Schema.Types.ObjectId,
+        required: true,
+        ref: 'UserAuth',
+    },
     firstname : {
         type : 'string',
         require : [true, 'please fill every field'],

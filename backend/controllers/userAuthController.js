@@ -1,11 +1,11 @@
 const jwt = require("jsonwebtoken")
 const bcrypt = require("bcryptjs")
 const asyncHandler = require('express-async-handler')
-const userAuth = require('../models/userAuthModel')
+const UserAuth = require('../models/userAuthModel')
 
 
 // @desc register user
-// @routes post /api/userAuth
+// @routes post /api/UserAuth
 // @access private
 const registerUser = asyncHandler( async(req,res) => {
 
@@ -14,56 +14,85 @@ const registerUser = asyncHandler( async(req,res) => {
     if(!firstname || !email || !password){
         res.status(400) 
 
-        throw new error ("please include all field");
+        throw new Error ("please include all field");
     }
 
-    const userExists = await userAuth.findOne({email}) 
+    const userExists = await UserAuth.findOne({email}) 
 
     if (userExists){
         res.status(400)
 
-        throw new error ("User already exist")
+        throw new Error ("User already exist")
     }
 
     //hash password
-    const salt = bcrypt.genSalt(10)
+    const salt = await bcrypt.genSalt(10)
     const hashedPassword = await bcrypt.hash(password, salt)
 
     //create user
 
-    const user = await User.create({
+    const user = await UserAuth.create({
         firstname,
         email,
-        password : hashedPassword
+        password : hashedPassword,
         
     })
 
     if(user){
         res.status(201).json({
-            _id : User.id,
-            firstname: User.firstname,
-            email: User.email
-        })
+            _id: user._id,
+            firstname: user.firstname,
+            email: user.email,
+            token: generateToken(user._id)
+        }) 
     } else {
         res.status(400)
-        throw new error("Invalid user data")
+        throw new Error("Invalid user data") 
     }
+
+    // res.json('User registered')
 })
 
 // @desc Authenticate User
-// @routes post /api/userAuth/login
+// @routes post /api/UserAuth/login
 // @access private
 const loginUser = asyncHandler( async(req, res) => {
-    res.json({message : "user logged in"})
+    const {email, password} = req.body
+
+    const user = await UserAuth.findOne({email})
+
+    if(user && (await bcrypt.compare(password, user.password))){
+        res.json({
+            _id: user._id,
+            firstname: user.firstname,
+            email: user.email,
+            token: generateToken(user._id)
+        })
+    } else {
+        res.status(400)
+        throw new Error("Wrong credentials")
+    }
+
 })
 
 // @desc get user data
-// @routes get /api/userAuth/me
+// @routes get /api/UserAuth/me
 // @access private
 const getme = asyncHandler( async(req, res) => {
-    res.json({message : "get data"})
+    const {_id, firstname, email } = await UserAuth.findById(req.user.id)
+
+    res.status(200).json({
+        id: _id,
+        firstname,
+        email,
+    })
 })
 
+const generateToken = (id) => {
+    return jwt.sign({ id }, process.env.JWT_SECRET, {
+        expiresIn: '30d',
+    })
+}
 module.exports= {
     registerUser,
     loginUser,

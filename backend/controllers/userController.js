@@ -1,17 +1,19 @@
 const asyncHandler = require('express-async-handler')
-const { create } = require('../models/userModel')
+
 const User = require('../models/userModel')
+const UserAuth = require('../models/userAuthModel')
+
 // @desc Get users
 // @routes Get /api/users
 // @access private
 const getUsers = asyncHandler(async (req, res) => {
-    const users = await User.find()
+    const users = await User.find({ user: req.UserAuth.id})
     res.status(200).json(users)
 })
 
 // @desc create users
 // @routes post /api/users
-// @access private
+// @access private 
 const createUser = asyncHandler(async (req, res) =>{
     
     if(!req.body){
@@ -19,6 +21,9 @@ const createUser = asyncHandler(async (req, res) =>{
 
         throw new Error('please add txt vlaue');;
     }
+
+      // Set the user field to the authenticated user
+        req.body.user = req.UserAuth.id;
 
         const newUser = new User({... req.body});
         const insertedUser = await newUser.save(); 
@@ -31,12 +36,27 @@ const createUser = asyncHandler(async (req, res) =>{
 // @routes put /api/users/:id
 // @access private
 const updateUser = asyncHandler(async (req,res) => {
-    const user  = await User.findById(req.params.id)
+    const userSearch  = await User.findById(req.params.id)
 
-    if(!user){
+    if(!userSearch){
         res.status(400)
         throw new Error('user not found');
     }  
+
+    const user = await UserAuth.findById(req.UserAuth.id)
+
+    // check for user
+    if(!user) {
+        res.status(401)
+        throw new Error('User not found')
+    }
+
+    // Make sure the logged in user matches the goal user
+    if(User.user.toString() !== UserAuth.id){
+        res.status(401)
+        throw new Error('User not authorized')
+    }
+
    const updateUser = await User.findByIdAndUpdate( req.params.id , req.body, {
     new : true
    })
@@ -47,8 +67,29 @@ const updateUser = asyncHandler(async (req,res) => {
 // @routes delete /api/users/:id
 // @access private
 const deleteUser = asyncHandler(async (req,res) => {
-    const deleteUser = await User.findByIdAndRemove(req.params.id)
+    const deleteUser = await User.findById(req.params.id)
+    if (!User){
+        res.status(400)
+        throw new Error('Details not found')
+    }
+    const user = await UserAuth.findById(req.UserAuth.id)
+
+    // check for user
+    if(!user) {
+        res.status(401)
+        throw new Error('User not found')
+    }
+
+    // Make sure the logged in user matches the goal user
+    if(User.user.toString() !== UserAuth.id){
+        res.status(401)
+        throw new Error('User not authorized')
+    }
+
+    await User.remove()
     res.status(200).json({message: `id deleted ${req.params.id}`});
+
+
 })
 
 module.exports = {
